@@ -1,10 +1,11 @@
 package routes
 
 import (
-	"github.com/atharv-g-kulkarni/go_rest_api/models"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+
+	"github.com/atharv-g-kulkarni/go_rest_api/models"
+	"github.com/gin-gonic/gin"
 )
 
 func getEvent(context *gin.Context) {
@@ -47,4 +48,50 @@ func createEvent(context *gin.Context) {
 	}
 
 	context.JSON(http.StatusCreated, gin.H{"message": "Event created!", "event": event})
+}
+
+func updateEvent(context *gin.Context) {
+	eventID, err := strconv.ParseInt(context.Param("id"), 10, 64)
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse event id."})
+		return
+	}
+	_, err = models.GetEventByID(eventID)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not found event with id. Try again later."})
+		return
+	}
+
+	var updatedEvent models.Event
+	err = context.ShouldBind(&updatedEvent)
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse request data"})
+		return
+	}
+	updatedEvent.ID = eventID
+	err = updatedEvent.Update()
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not update event."})
+		return
+	}
+	context.JSON(http.StatusOK, gin.H{"message": "Event updated successfully!"})
+}
+
+func deleteEvent(context *gin.Context) {
+	eventID, err := strconv.ParseInt(context.Param("id"), 10, 64)
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse event id."})
+		return
+	}
+	event, err := models.GetEventByID(eventID)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not found event with id. Try again later."})
+		return
+	}
+	err = event.Delete()
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not delete event."})
+		return
+	}
+	context.JSON(http.StatusOK, gin.H{"message": "Event deleted successfully!"})
 }

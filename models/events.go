@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/atharv-g-kulkarni/go_rest_api/db"
@@ -47,7 +46,6 @@ func GetAllEvents() ([]Event, error) {
 	var event Event
 	for rows.Next() {
 		err := rows.Scan(&event.ID, &event.Name, &event.Description, &event.Location, &event.DateTime, &event.UserID)
-		fmt.Println(err)
 		if err != nil {
 			return nil, err
 		}
@@ -67,4 +65,32 @@ func GetEventByID(id int64) (*Event, error) {
 		return nil, err
 	}
 	return &event, err
+}
+
+func (event Event) Update() error {
+	query := `
+	UPDATE events
+	SET name= ?, description= ?, location= ?, dateTime= ?
+	WHERE id = ?
+	`
+
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(event.Name, event.Description, event.Location, event.DateTime, event.ID)
+	return err
+}
+
+func (event Event) Delete() error {
+	query := `DELETE FROM events WHERE id = ?`
+
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(event.ID)
+	return err
 }
