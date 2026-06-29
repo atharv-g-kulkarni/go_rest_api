@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/atharv-g-kulkarni/go_rest_api/models"
+	"github.com/atharv-g-kulkarni/go_rest_api/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,7 +23,7 @@ func signup(context *gin.Context) {
 		return
 	}
 
-	context.JSON(http.StatusCreated, gin.H{"message": "User created!", "user": user})
+	context.JSON(http.StatusCreated, gin.H{"message": "User created!", "user": user.EMAIL})
 }
 
 func login(context *gin.Context) {
@@ -41,6 +42,11 @@ func login(context *gin.Context) {
 		return
 	}
 
-	context.JSON(http.StatusOK, gin.H{"message": "Login successful!"})
+	token, err := utils.GenerateToken(user.EMAIL, user.ID)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not authenticate user."})
+	}
+
+	context.JSON(http.StatusOK, gin.H{"message": "Login successful!", "token": token})
 
 }
